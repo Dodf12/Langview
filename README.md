@@ -1,0 +1,52 @@
+# langview
+
+A CLI tool that shows a GitHub-style language breakdown bar for any Git project or directory right in the termilan.
+
+Example:
+```
+  Languages
+
+  ████████████████████████████████████████████░░░░░░░░░░░░░░░░
+
+  ● TypeScript 73.5%    ● JavaScript 13.1%
+  ● Markdown 9.5%       ● JSON 2.3%
+  ● HTML 1.0%           ● YAML 0.4%
+```
+
+## Install
+
+```bash
+pip install langview
+```
+
+## Usage
+
+```bash
+# Run in a git repo
+langview
+
+# Point at any directory
+langview ~/projects/my-app
+
+# Wider bar
+langview ~/projects/my-app --width 80
+
+# If not a git repo or to scan all files included untracker, execute thsi command
+langview ~/projects/my-app --walk
+```
+
+## Options
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `path` | `.` | Path to the project directory |
+| `--width N` | `60` | Width of the language bar in characters |
+| `--walk` | off | Walk the filesystem instead of using `git ls-files` |
+
+## Supported Languages
+
+Python, TypeScript, JavaScript, Rust, Go, C, C++, Java, Kotlin, Swift, Ruby, PHP, C#, Shell, HTML, CSS, SCSS, JSON, YAML, TOML, Markdown, R, Julia, Lua, Elixir, Erlang, Haskell, OCaml, Dart, Vue, Svelte, Terraform, Makefile, DTrace, and more.
+
+## License
+
+MIT
