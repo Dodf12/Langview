@@ -65,6 +65,8 @@ LANG_COLORS: dict[str, tuple[str, int]] = {
     "makefile":("Makefile",  64),
     ".dtrace":("DTrace",     244),  # gray
     ".d":     ("DTrace",     244),
+    ".txt":   ("Text",       252),  # light gray,
+    ".tex":   ("TeX",        281),  # light purple
 }
 
 # Extensions/names to skip entirely
@@ -218,17 +220,66 @@ def render_bar(totals: dict[str, int], bar_width: int = 60) -> None:
     print()
 
 
-def main() -> None:
-    #This first part sets up a CLI argument parser using the argparse library.
-    #  It defines the program name, description, and the expected arguments. 
-    # The user can specify a path to a Git repository (defaulting to the current directory),
-    # the width of the language bar, and whether to walk the filesystem instead of using git ls-files. 
-    # The parsed arguments are stored in the args variable for later use.
+def print_help() -> None:
+    b = "\x1b[1m"       # bold
+    r = "\x1b[0m"       # reset
+    dim = "\x1b[2m"     # dim
 
-    #This specific 3 llines of code are used to create a command-line interface (CLI) for the program.
+    print(f"""
+{b}langview{r} — GitHub-style language bar for any Git project
+
+{b}USAGE{r}
+  langview {dim}[path] [options]{r}
+
+{b}ARGUMENTS{r}
+  {b}path{r}    Directory to scan {dim}(default: current directory){r}
+
+{b}OPTIONS{r}
+  {b}--width N{r}   Width of the language bar in characters {dim}(default: 60){r}
+  {b}--walk{r}      Scan all files instead of only git-tracked files
+  {b}--langs{r}     List all recognized languages and their colors
+  {b}-h, --help{r}  Show this help message
+
+{b}EXAMPLES{r}
+  langview                          {dim}# scan current git repo{r}
+  langview ~/projects/my-app        {dim}# scan a specific project{r}
+  langview ~/projects/my-app --width 80
+  langview ~/projects/my-app --walk {dim}# include untracked files{r}
+  langview --langs                  {dim}# show all supported languages{r}
+""")
+
+
+def print_langs() -> None:
+    b = "\x1b[1m"
+    r = "\x1b[0m"
+    print(f"\n{b}Supported languages:{r}\n")
+    seen: set[str] = set()
+    langs = []
+    for _, (name, code) in LANG_COLORS.items():
+        if name not in seen:
+            seen.add(name)
+            langs.append((name, code))
+    langs.sort(key=lambda x: x[0])
+    col = 0
+    for name, code in langs:
+        dot = ansi_fg(code, "●")
+        entry = f"  {dot} {b}{name}{r}"
+        if col == 0:
+            print(f"{entry:<40}", end="")
+            col = 1
+        else:
+            print(entry)
+            col = 0
+    if col == 1:
+        print()
+    print()
+
+
+def main() -> None:
     parser = argparse.ArgumentParser(
         prog="langview",
         description="Show a GitHub-style language breakdown for a Git project.",
+        add_help=False,
     )
 
     # The following lines add arguments to the parser
@@ -255,7 +306,25 @@ def main() -> None:
         action="store_true",
         help="Walk the filesystem instead of using git ls-files",
     )
+    parser.add_argument(
+        "--langs",
+        action="store_true",
+        help="List all recognized languages and their colors",
+    )
+    parser.add_argument(
+        "-h", "--help",
+        action="store_true",
+        help="Show this help message",
+    )
     args = parser.parse_args()
+
+    if args.help:
+        print_help()
+        sys.exit(0)
+
+    if args.langs:
+        print_langs()
+        sys.exit(0)
 
     root = Path(args.path).resolve()
     if not root.is_dir():
