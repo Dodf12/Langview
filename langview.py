@@ -3,6 +3,7 @@
 
 import argparse
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -161,6 +162,12 @@ def ansi_bg(color_code: int, text: str) -> str:
 def ansi_fg(color_code: int, text: str) -> str:
     return f"\x1b[38;5;{color_code}m{text}\x1b[0m"
 
+
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+def visible_len(s: str) -> int:
+    return len(_ANSI_RE.sub("", s))
+
 '''
 Finds teh color for the given language name and if not found, defaults to gray
 '''
@@ -204,13 +211,17 @@ def render_bar(totals: dict[str, int], bar_width: int = 60) -> None:
     print()
 
     # Legend — two columns
-    col = 0
+    entries = []
     for lang, size in ranked:
         pct = size / grand * 100
         dot = ansi_fg(color_for_lang(lang), "●")
-        entry = f"{dot} \x1b[1m{lang}\x1b[0m {pct:.1f}%"
+        entries.append(f"{dot} \x1b[1m{lang}\x1b[0m {pct:.1f}%")
+
+    col_width = max(visible_len(e) for e in entries) + 4 if entries else 24
+    col = 0
+    for entry in entries:
         if col == 0:
-            print(f"  {entry:<38}", end="")
+            print("  " + entry + " " * (col_width - visible_len(entry)), end="")
             col = 1
         else:
             print(entry)
@@ -260,12 +271,16 @@ def print_langs() -> None:
             seen.add(name)
             langs.append((name, code))
     langs.sort(key=lambda x: x[0])
-    col = 0
+    entries = []
     for name, code in langs:
         dot = ansi_fg(code, "●")
-        entry = f"  {dot} {b}{name}{r}"
+        entries.append(f"  {dot} {b}{name}{r}")
+
+    col_width = max(visible_len(e) for e in entries) + 4 if entries else 24
+    col = 0
+    for entry in entries:
         if col == 0:
-            print(f"{entry:<40}", end="")
+            print(entry + " " * (col_width - visible_len(entry)), end="")
             col = 1
         else:
             print(entry)
