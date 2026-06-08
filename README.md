@@ -1,5 +1,7 @@
 # langview
 
+Click here to see number of links [Clickable Text](https://pypistats.org/packages/langview)
+
 A CLI tool that shows a GitHub-style language breakdown bar for any Git project or directory right in the termilan.
 
 Example:
